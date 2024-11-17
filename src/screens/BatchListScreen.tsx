@@ -1,26 +1,28 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Button } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { Batch } from '../types/Batch';
+import React, { useState } from "react";
+import { View, FlatList, Text, Button } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { useTheme } from "../context/ThemeContext";
+import BatchCard from "../components/BatchCard";
+import { Batch } from "../types/Batch";
 
 export default function BatchListScreen() {
+  const { darkMode } = useTheme();
   const navigation = useNavigation();
 
-  // Initial batches for testing
   const [batches, setBatches] = useState<Batch[]>([
     {
-      id: '1',
-      name: 'Golden Pyment',
+      id: "1",
+      name: "Golden Pyment",
       startDate: new Date().toISOString(),
       abvGoal: 14,
       targetStartingGravity: 1.106,
       startingGravity: 1.110,
       currentGravity: 1.020,
       finalGravity: undefined,
-      currentABV: (1.110 - 1.020) * 131.25, // Calculated ABV
+      currentABV: (1.110 - 1.020) * 131.25,
       ingredients: [],
       steps: [],
-      notes: 'Test batch for golden pyment.',
+      notes: "Test batch for golden pyment.",
     },
     {
       id: '2',
@@ -38,49 +40,28 @@ export default function BatchListScreen() {
     },
   ]);
 
-  // Update a batch by ID
-  const updateBatch = (id: string, updates: Partial<Batch>) => {
-    setBatches((prevBatches) =>
-      prevBatches.map((batch) =>
-        batch.id === id ? { ...batch, ...updates } : batch
-      )
-    );
-  };
-
   return (
-    <View className="flex-1 bg-gray-100 p-4">
-      <Text className="text-2xl font-bold mb-4">My Mead Batches</Text>
-
-      {/* Display batches */}
+    <View className={`flex-1 p-4 ${darkMode ? "bg-darkCream" : "bg-lightCream"}`}>
+      <Text className={`text-2xl font-bold mb-4 ${darkMode ? "text-darkGold" : "text-honeyRed"}`}>
+        My Mead Batches
+      </Text>
       <FlatList
         data={batches}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('BatchDetail', {
-                batch: item,
-                updateBatch,
-              })
+          <BatchCard
+            batch={item}
+            onPress={() => navigation.navigate("BatchDetail", { batch: item })}
+            onEditPress={() =>
+              navigation.navigate("AddEditBatch", { batch: item, setBatches })
             }
-          >
-            <View className="p-4 bg-white rounded mb-2 shadow">
-              <Text className="text-lg font-semibold">{item.name}</Text>
-              <Text className="text-sm text-gray-600">
-                ABV Goal: {item.abvGoal}%
-              </Text>
-              <Text className="text-sm text-gray-600">
-                Current ABV: {((item.startingGravity - item.currentGravity) * 131.25).toFixed(2)}%
-              </Text>
-            </View>
-          </TouchableOpacity>
+          />
         )}
       />
-
-      {/* Button to add a new batch */}
       <Button
         title="Add New Batch"
-        onPress={() => navigation.navigate('AddEditBatch', { setBatches })}
+        onPress={() => navigation.navigate("AddEditBatch", { setBatches })}
+        color={darkMode ? "#FFC300" : "#8B0000"}
       />
     </View>
   );

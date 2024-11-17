@@ -1,39 +1,45 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import React from "react";
+import { View, Text, Button } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { useTheme } from "../context/ThemeContext";
 
 export default function BatchDetailScreen() {
   const route = useRoute();
-  const { batch, updateBatch } = route.params as any;
+  const navigation = useNavigation();
+  const { batch } = route.params;
+  const { darkMode } = useTheme();
 
-  const [currentGravity, setCurrentGravity] = useState(batch.currentGravity);
-
-  // Calculate the current ABV
-  const calculateCurrentABV = (startingGravity: number, currentGravity: number) => {
-    return ((startingGravity - currentGravity) * 131.25).toFixed(2);
-  };
-
-  const handleUpdate = () => {
-    updateBatch(batch.id, { currentGravity });
+  const calculateCurrentABV = () => {
+    return ((batch.startingGravity - batch.currentGravity) * 131.25).toFixed(2);
   };
 
   return (
-    <View className="flex-1 bg-gray-100 p-4">
-      <Text className="text-2xl font-bold">{batch.name}</Text>
-      <Text className="text-lg mt-2">ABV Goal: {batch.abvGoal}%</Text>
-      <Text className="text-lg mt-2">Target Starting Gravity: {batch.targetStartingGravity}</Text>
-      <Text className="text-lg mt-2">Starting Gravity: {batch.startingGravity}</Text>
-      <Text className="text-lg mt-2">Current Gravity:</Text>
-      <TextInput
-        value={currentGravity.toString()}
-        onChangeText={(value) => setCurrentGravity(parseFloat(value))}
-        keyboardType="numeric"
-        className="border p-2 rounded mb-4"
-      />
-      <Text className="text-lg mt-2">
-        Current ABV: {calculateCurrentABV(batch.startingGravity, currentGravity)}%
+    <View className={`flex-1 p-4 ${darkMode ? "bg-darkCream" : "bg-lightCream"}`}>
+      <Text className={`text-2xl font-bold mb-4 ${darkMode ? "text-darkGold" : "text-honeyRed"}`}>
+        {batch.name}
       </Text>
-      <Button title="Update Gravity" onPress={handleUpdate} />
+      <Text className={`text-sm mb-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
+        Start Date: {new Date(batch.startDate).toDateString()}
+      </Text>
+      <Text className={`text-sm mb-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
+        ABV Goal: {batch.abvGoal}%
+      </Text>
+      <Text className={`text-sm mb-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
+        Current ABV: {calculateCurrentABV()}%
+      </Text>
+      <Text className={`text-sm mb-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
+        Starting Gravity: {batch.startingGravity}
+      </Text>
+      <Text className={`text-sm mb-4 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
+        Notes: {batch.notes}
+      </Text>
+      <Button
+        title="Edit Batch"
+        onPress={() =>
+          navigation.navigate("AddEditBatch", { batch, setBatches: null })
+        }
+        color={darkMode ? "#FFC300" : "#8B0000"}
+      />
     </View>
   );
 }

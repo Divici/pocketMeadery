@@ -1,81 +1,104 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Text } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import React, { useState, useEffect } from "react";
+import { View, Text, TextInput, Button, Alert } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
+import { useTheme } from "../context/ThemeContext";
+import { Batch } from "../types/Batch";
 
 export default function AddEditBatchScreen() {
-  const navigation = useNavigation();
   const route = useRoute();
-  const { setBatches } = route.params as any;
+  const navigation = useNavigation();
+  const { darkMode } = useTheme();
 
-  const [name, setName] = useState('');
-  const [abvGoal, setAbvGoal] = useState('');
-  const [startingGravity, setStartingGravity] = useState('');
-  const [notes, setNotes] = useState('');
-  const [targetStartingGravity, setTargetStartingGravity] = useState<number | null>(null);
+  const { setBatches, batch }: any = route.params || {}; // Passed when editing
+  const isEditing = Boolean(batch); // Determine if we're editing or adding
 
-  // Calculate the target starting gravity whenever the ABV Goal changes
+  // State for form inputs
+  const [name, setName] = useState("");
+  const [abvGoal, setAbvGoal] = useState<string>("");
+  const [startingGravity, setStartingGravity] = useState<string>("");
+
+  // Populate fields if editing
   useEffect(() => {
-    if (abvGoal) {
-      const targetSG = (parseFloat(abvGoal) / 131.25) + 1;
-      setTargetStartingGravity(parseFloat(targetSG.toFixed(3)));
+    if (isEditing) {
+      setName(batch.name || "");
+      setAbvGoal(batch.abvGoal.toString() || "");
+      setStartingGravity(batch.startingGravity.toString() || "");
     }
-  }, [abvGoal]);
+  }, [batch]);
 
   const handleSave = () => {
-    const newBatch = {
-      id: Date.now().toString(),
+    if (!name || !abvGoal || !startingGravity) {
+      Alert.alert("Error", "Please fill out all fields.");
+      return;
+    }
+
+    const newBatch: Batch = {
+      id: isEditing ? batch.id : Date.now().toString(), // Unique ID for new batches
       name,
+      startDate: isEditing ? batch.startDate : new Date().toISOString(),
       abvGoal: parseFloat(abvGoal),
-      targetStartingGravity: targetStartingGravity || 0,
+      targetStartingGravity: parseFloat(startingGravity),
       startingGravity: parseFloat(startingGravity),
-      currentGravity: parseFloat(startingGravity), // Initially set to starting gravity
-      finalGravity: undefined,
+      currentGravity: parseFloat(startingGravity),
       currentABV: 0,
-      notes,
-      startDate: new Date().toISOString(),
       ingredients: [],
       steps: [],
+      notes: "",
     };
 
-    setBatches((prevBatches: any) => [...prevBatches, newBatch]);
-    navigation.goBack();
+    // Update the batches list
+    setBatches((prev: Batch[]) => {
+      if (isEditing) {
+        return prev.map((b) => (b.id === batch.id ? newBatch : b));
+      } else {
+        return [...prev, newBatch];
+      }
+    });
+
+    navigation.goBack(); // Return to BatchListScreen
   };
 
   return (
-    <View className="flex-1 bg-gray-100 p-4">
+    <View className="flex-1 p-4 bg-gray-100">
+      <Text className="text-2xl font-bold text-gray-800 mb-4">
+        {isEditing ? "Edit Batch" : "Add New Batch"}
+      </Text>
+
+      {/* Name Input */}
+      <Text className="text-lg font-semibold text-gray-700 mb-2">Batch Name</Text>
       <TextInput
-        placeholder="Batch Name"
         value={name}
         onChangeText={setName}
-        className="border p-2 rounded mb-4"
+        placeholder="e.g., Golden Pyment"
+        className="p-2 bg-white rounded border border-gray-300 mb-4"
       />
+
+      {/* ABV Goal Input */}
+      <Text className="text-lg font-semibold text-gray-700 mb-2">ABV Goal (%)</Text>
       <TextInput
-        placeholder="ABV Goal (%)"
         value={abvGoal}
         onChangeText={setAbvGoal}
+        placeholder="e.g., 14"
         keyboardType="numeric"
-        className="border p-2 rounded mb-4"
+        className="p-2 bg-white rounded border border-gray-300 mb-4"
       />
-      {targetStartingGravity && (
-        <Text className="mb-4">
-          Target Starting Gravity: {targetStartingGravity}
-        </Text>
-      )}
+
+      {/* Starting Gravity Input */}
+      <Text className="text-lg font-semibold text-gray-700 mb-2">Starting Gravity</Text>
       <TextInput
-        placeholder="Actual Starting Gravity"
         value={startingGravity}
         onChangeText={setStartingGravity}
+        placeholder="e.g., 1.110"
         keyboardType="numeric"
-        className="border p-2 rounded mb-4"
+        className="p-2 bg-white rounded border border-gray-300 mb-4"
       />
-      <TextInput
-        placeholder="Notes"
-        value={notes}
-        onChangeText={setNotes}
-        multiline
-        className="border p-2 rounded mb-4"
+
+      {/* Save Button */}
+      <Button
+        title={isEditing ? "Save Changes" : "Add Batch"}
+        onPress={handleSave}
+        color="#8B0000"
       />
-      <Button title="Save Batch" onPress={handleSave} />
     </View>
   );
 }
