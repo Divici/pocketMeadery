@@ -6,7 +6,10 @@ import { MaterialIcons } from "@expo/vector-icons";
 import AddIngredientModal from "../components/AddIngredientModal";
 import EditIngredientGroupModal from "../components/EditIngredientGroupModal";
 import AddStepModal from "../components/AddStepModal";
+import EditStepGroupModal from "../components/EditStepGroupModal";
 import EditStepModal from "../components/EditStepModal";
+import IngredientsSection from "../components/IngredientsSection";
+import StepsSection from "../components/StepsSection";
 
 export default function BatchDetailScreen() {
   const route = useRoute();
@@ -59,14 +62,37 @@ export default function BatchDetailScreen() {
   };
 
   const handleAddStep = (newStep: { date: string; note: string }) => {
-    const updatedSteps = [...editedBatch.steps, newStep];
+    const today = new Date().toDateString();
+    const existingGroupIndex = editedBatch.steps.findIndex(
+      (group) => new Date(group.date).toDateString() === today
+    );
+  
+    let updatedSteps;
+  
+    if (existingGroupIndex !== -1) {
+      const updatedGroup = {
+        ...editedBatch.steps[existingGroupIndex],
+        steps: [...editedBatch.steps[existingGroupIndex].steps, newStep],
+      };
+      updatedSteps = [
+        ...editedBatch.steps.slice(0, existingGroupIndex),
+        updatedGroup,
+        ...editedBatch.steps.slice(existingGroupIndex + 1),
+      ];
+    } else {
+      updatedSteps = [
+        ...editedBatch.steps,
+        { date: today, steps: [newStep] },
+      ];
+    }
+  
     setEditedBatch({ ...editedBatch, steps: updatedSteps });
     if (setBatches) {
       setBatches((prev) =>
         prev.map((b) => (b.id === editedBatch.id ? { ...b, steps: updatedSteps } : b))
       );
     }
-  };
+  };  
   
   const handleEditStep = (index: number, updatedStep: { date: string; note: string }) => {
     const updatedSteps = editedBatch.steps.map((step, idx) =>
@@ -84,140 +110,30 @@ export default function BatchDetailScreen() {
 
   return (
     <ScrollView className={`flex-1 p-4 ${darkMode ? "bg-darkCream" : "bg-lightCream"}`}>
-      {/* Ingredients Section */}
-      <View className="mb-6">
-        <View className="flex-row justify-between items-center mb-2">
-          <TouchableOpacity
-            onPress={() => setIsIngredientsExpanded(!isIngredientsExpanded)}
-            className="flex-row items-center justify-center flex-1"
-          >
-            <Text className={`text-lg font-bold ${darkMode ? "text-darkGold" : "text-honeyRed"} text-center mr-2 ml-16`}>
-              Ingredients
-            </Text>
-            <MaterialIcons
-              name={isIngredientsExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-              size={24}
-              color={darkMode ? "#FFC300" : "#8B0000"}
-            /> 
-          </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => {
-            setIsAddingIngredient(true) 
-            setIsIngredientsExpanded(true)
-            }} 
-            className="ml-4"
-          >
-            <MaterialIcons
-              name={"add-circle"}
-              size={36}
-              color={darkMode ? "#FFC300" : "#8B0000"}
-            /> 
-          </TouchableOpacity>
-        </View>
+      <IngredientsSection
+        ingredients={editedBatch.ingredients}
+        isExpanded={isIngredientsExpanded}
+        setIsExpanded={setIsIngredientsExpanded}
+        darkMode={darkMode}
+        onAddIngredient={() => {
+          setIsAddingIngredient(true);
+          setIsIngredientsExpanded(true);
+        }}
+        onEditGroup={(date) => setEditingGroupDate(date)}
+      />
 
-        {isIngredientsExpanded && (
-          <View style={{ maxHeight: "40VH" }} className="">
-            <FlatList
-              data={sortedIngredients}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <View className="mb-2 shadow-inner">
-                  <View className="flex-row justify-start items-center mb-1">
-                    <Text className={`text-sm font-bold ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
-                      {new Date(item.date).toDateString()}:
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() =>
-                        setEditingGroupDate(new Date(item.date).toDateString())
-                      }
-                      className="ml-4"
-                    >
-                      <MaterialIcons
-                        name={"edit-note"}
-                        size={24}
-                        color={darkMode ? "#FFC300" : "#8B0000"}
-                      /> 
-                    </TouchableOpacity>
-                  </View>
-                  {item.items.map((ingredient, idx) => (
-                    <Text key={idx} className={`pl-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
-                      - {ingredient}
-                    </Text>
-                  ))}
-                </View>
-              )}
-            />
-          </View>
-        )}
-      </View>
-
-      {/* Steps Section */}
-      <View className="mb-6">
-        <View className="flex-row justify-between items-center mb-2">
-          <TouchableOpacity
-            onPress={() => setIsStepsExpanded(!isStepsExpanded)}
-            className="flex-row items-center justify-center flex-1"
-          >
-            <Text className={`text-lg font-bold ${darkMode ? "text-darkGold" : "text-honeyRed"} text-center mr-2 ml-16`}>
-              Steps
-            </Text>
-            <MaterialIcons
-              name={isStepsExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"}
-              size={24}
-              color={darkMode ? "#FFC300" : "#8B0000"}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              setIsAddingStep(true);
-              setIsStepsExpanded(true);
-            }}
-            className="ml-4"
-          >
-            <MaterialIcons
-              name={"add-circle"}
-              size={36}
-              color={darkMode ? "#FFC300" : "#8B0000"}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {isStepsExpanded && (
-          <View style={{ maxHeight: "40VH" }}>
-            <FlatList
-              data={editedBatch.steps}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item, index }) => (
-                <View className="mb-2 shadow-inner">
-                  <View className="flex-row justify-start items-center mb-1">
-                    <Text className={`text-sm font-bold ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
-                      {new Date(item.date).toDateString()}:
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => setEditingStepIndex(index)}
-                      className="ml-4"
-                    >
-                      <MaterialIcons
-                        name={"edit-note"}
-                        size={24}
-                        color={darkMode ? "#FFC300" : "#8B0000"}
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  <Text className={`pl-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
-                    <MaterialIcons
-                      name={"circle"}
-                      size={8}
-                    />
-                    {" "}{item.note}
-                  </Text>
-                </View>
-              )}
-            />
-          </View>
-        )}
-      </View>
+      <StepsSection
+        steps={editedBatch.steps}
+        isExpanded={isStepsExpanded}
+        setIsExpanded={setIsStepsExpanded}
+        darkMode={darkMode}
+        onAddStep={() => {
+          setIsAddingStep(true);
+          setIsStepsExpanded(true);
+        }}
+        onEditStep={(index) => setEditingStepIndex(index)}
+      />
 
       {/* Add Ingredient Modal */}
       <AddIngredientModal
@@ -260,19 +176,28 @@ export default function BatchDetailScreen() {
         onAdd={handleAddStep}
       />
 
-      {/* Edit Step Modal */}
-      {editingStepIndex !== null && (
-        <EditStepModal
-          visible={editingStepIndex !== null}
-          onClose={() => setEditingStepIndex(null)}
-          step={editedBatch.steps[editingStepIndex]}
-          onSave={(updatedStep) => {
-            handleEditStep(editingStepIndex, updatedStep);
-            setEditingStepIndex(null);
-          }}
-        />
-      )}
-
+      {/* Edit Step Group Modal */}
+      <EditStepGroupModal
+        visible={editingGroupDate !== null}
+        onClose={() => setEditingGroupDate(null)}
+        group={editedBatch.steps.find(
+          (group) => new Date(group.date).toDateString() === editingGroupDate
+        )}
+        onSave={(updatedSteps) => {
+          const updatedGroups = editedBatch.steps.map((group) =>
+            new Date(group.date).toDateString() === editingGroupDate
+              ? { ...group, steps: updatedSteps }
+              : group
+          );
+          setEditedBatch({ ...editedBatch, steps: updatedGroups });
+          setEditingGroupDate(null);
+          if (setBatches) {
+            setBatches((prev) =>
+              prev.map((b) => (b.id === editedBatch.id ? { ...b, steps: updatedGroups } : b))
+            );
+          }
+        }}
+      />
     </ScrollView>
   );
 }
