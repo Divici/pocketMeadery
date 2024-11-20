@@ -5,6 +5,8 @@ import { useTheme } from "../context/ThemeContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import AddIngredientModal from "../components/AddIngredientModal";
 import EditIngredientGroupModal from "../components/EditIngredientGroupModal";
+import AddStepModal from "../components/AddStepModal";
+import EditStepModal from "../components/EditStepModal";
 
 export default function BatchDetailScreen() {
   const route = useRoute();
@@ -192,9 +194,6 @@ export default function BatchDetailScreen() {
                     <Text className={`text-sm font-bold ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
                       {new Date(item.date).toDateString()}:
                     </Text>
-                    <Text className={`pl-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
-                      {item.note}
-                    </Text>
                     <TouchableOpacity
                       onPress={() => setEditingStepIndex(index)}
                       className="ml-4"
@@ -206,6 +205,13 @@ export default function BatchDetailScreen() {
                       />
                     </TouchableOpacity>
                   </View>
+                  <Text className={`pl-2 ${darkMode ? "text-darkGold" : "text-gray-700"}`}>
+                    <MaterialIcons
+                      name={"circle"}
+                      size={8}
+                    />
+                    {" "}{item.note}
+                  </Text>
                 </View>
               )}
             />
@@ -246,6 +252,27 @@ export default function BatchDetailScreen() {
           }}
         />
       )}
+
+      {/* Add Step Modal */}
+      <AddStepModal
+        visible={isAddingStep}
+        onClose={() => setIsAddingStep(false)}
+        onAdd={handleAddStep}
+      />
+
+      {/* Edit Step Modal */}
+      {editingStepIndex !== null && (
+        <EditStepModal
+          visible={editingStepIndex !== null}
+          onClose={() => setEditingStepIndex(null)}
+          step={editedBatch.steps[editingStepIndex]}
+          onSave={(updatedStep) => {
+            handleEditStep(editingStepIndex, updatedStep);
+            setEditingStepIndex(null);
+          }}
+        />
+      )}
+
     </ScrollView>
   );
 }
