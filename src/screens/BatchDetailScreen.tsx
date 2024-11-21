@@ -10,6 +10,7 @@ import EditStepGroupModal from "../components/EditStepGroupModal";
 import EditStepModal from "../components/EditStepModal";
 import IngredientsSection from "../components/IngredientsSection";
 import StepsSection from "../components/StepsSection";
+import DetailsSection from "../components/DetailsSection";
 
 export default function BatchDetailScreen() {
   const route = useRoute();
@@ -22,6 +23,8 @@ export default function BatchDetailScreen() {
 
   const [isStepsExpanded, setIsStepsExpanded] = useState(false);
   const [isAddingStep, setIsAddingStep] = useState(false);
+  const [editingStepGroupDate, setEditingStepGroupDate] = useState<string | null>(null);
+
   const [editingStepIndex, setEditingStepIndex] = useState<number | null>(null);
 
   const [editedBatch, setEditedBatch] = useState(batch);
@@ -70,6 +73,7 @@ export default function BatchDetailScreen() {
     let updatedSteps;
   
     if (existingGroupIndex !== -1) {
+      // Add step to the existing group
       const updatedGroup = {
         ...editedBatch.steps[existingGroupIndex],
         steps: [...editedBatch.steps[existingGroupIndex].steps, newStep],
@@ -80,6 +84,7 @@ export default function BatchDetailScreen() {
         ...editedBatch.steps.slice(existingGroupIndex + 1),
       ];
     } else {
+      // Create a new group
       updatedSteps = [
         ...editedBatch.steps,
         { date: today, steps: [newStep] },
@@ -87,12 +92,13 @@ export default function BatchDetailScreen() {
     }
   
     setEditedBatch({ ...editedBatch, steps: updatedSteps });
+  
     if (setBatches) {
       setBatches((prev) =>
         prev.map((b) => (b.id === editedBatch.id ? { ...b, steps: updatedSteps } : b))
       );
     }
-  };  
+  };   
   
   const handleEditStep = (index: number, updatedStep: { date: string; note: string }) => {
     const updatedSteps = editedBatch.steps.map((step, idx) =>
@@ -111,28 +117,30 @@ export default function BatchDetailScreen() {
   return (
     <ScrollView className={`flex-1 p-4 ${darkMode ? "bg-darkCream" : "bg-lightCream"}`}>
 
-      <IngredientsSection
-        ingredients={editedBatch.ingredients}
+      <DetailsSection
+        itemsList={editedBatch.ingredients}
+        itemTitle={'Ingredients'}
         isExpanded={isIngredientsExpanded}
         setIsExpanded={setIsIngredientsExpanded}
         darkMode={darkMode}
-        onAddIngredient={() => {
+        onAddItem={() => {
           setIsAddingIngredient(true);
           setIsIngredientsExpanded(true);
         }}
         onEditGroup={(date) => setEditingGroupDate(date)}
       />
 
-      <StepsSection
-        steps={editedBatch.steps}
+      <DetailsSection
+        itemsList={editedBatch.steps}
+        itemTitle={'Steps'}
         isExpanded={isStepsExpanded}
         setIsExpanded={setIsStepsExpanded}
         darkMode={darkMode}
-        onAddStep={() => {
+        onAddItem={() => {
           setIsAddingStep(true);
           setIsStepsExpanded(true);
         }}
-        onEditStep={(index) => setEditingStepIndex(index)}
+        onEditGroup={(date) => setEditingStepGroupDate(date)}
       />
 
       {/* Add Ingredient Modal */}
@@ -177,27 +185,34 @@ export default function BatchDetailScreen() {
       />
 
       {/* Edit Step Group Modal */}
-      <EditStepGroupModal
-        visible={editingGroupDate !== null}
-        onClose={() => setEditingGroupDate(null)}
-        group={editedBatch.steps.find(
-          (group) => new Date(group.date).toDateString() === editingGroupDate
-        )}
-        onSave={(updatedSteps) => {
-          const updatedGroups = editedBatch.steps.map((group) =>
-            new Date(group.date).toDateString() === editingGroupDate
-              ? { ...group, steps: updatedSteps }
-              : group
-          );
-          setEditedBatch({ ...editedBatch, steps: updatedGroups });
-          setEditingGroupDate(null);
-          if (setBatches) {
-            setBatches((prev) =>
-              prev.map((b) => (b.id === editedBatch.id ? { ...b, steps: updatedGroups } : b))
-            );
+      {editingStepGroupDate && (
+        <EditStepGroupModal
+          visible={editingStepGroupDate !== null}
+          onClose={() => setEditingStepGroupDate(null)}
+          group={
+            editedBatch.steps.find(
+              (group) => new Date(group.date).toDateString() === editingStepGroupDate
+            ) || { date: editingStepGroupDate, steps: [] } // Fallback group
           }
-        }}
-      />
+          onSave={(updatedSteps) => {
+            const updatedGroups = editedBatch.steps.map((group) =>
+              new Date(group.date).toDateString() === editingStepGroupDate
+                ? { ...group, steps: updatedSteps }
+                : group
+            );
+            setEditedBatch({ ...editedBatch, steps: updatedGroups });
+            setEditingStepGroupDate(null);
+            if (setBatches) {
+              setBatches((prev) =>
+                prev.map((b) =>
+                  b.id === editedBatch.id ? { ...b, steps: updatedGroups } : b
+                )
+              );
+            }
+          }}
+        />
+      )}
+      
     </ScrollView>
   );
 }

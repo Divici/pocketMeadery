@@ -2,15 +2,16 @@ import React from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function IngredientsSection({
-  ingredients,
+export default function DetailsSection({
+  itemsList,
+  itemTitle,
   isExpanded,
   setIsExpanded,
   darkMode,
-  onAddIngredient,
+  onAddItem,
   onEditGroup,
 }) {
-  const sortedIngredients = [...ingredients].sort(
+  const sortedItems = [...itemsList].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
@@ -26,7 +27,7 @@ export default function IngredientsSection({
               darkMode ? "text-darkGold" : "text-honeyRed"
             } text-center mr-2 ml-16`}
           >
-            Ingredients
+            {itemTitle}
           </Text>
           <MaterialIcons
             name={isExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"}
@@ -36,7 +37,7 @@ export default function IngredientsSection({
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={onAddIngredient}
+          onPress={onAddItem}
           className="ml-4"
         >
           <MaterialIcons
@@ -50,7 +51,7 @@ export default function IngredientsSection({
       {isExpanded && (
         <View style={{ maxHeight: "40VH" }}>
           <FlatList
-            data={sortedIngredients}
+            data={sortedItems}
             keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <View className="mb-2 shadow-inner">
@@ -74,16 +75,29 @@ export default function IngredientsSection({
                   </TouchableOpacity>
                 </View>
                 
-                {item.items.map((ingredient, idx) => (
-                  <Text
-                    key={idx}
-                    className={`pl-2 ${
-                      darkMode ? "text-darkGold" : "text-gray-700"
-                    }`}
-                  >
-                    - {ingredient}
-                  </Text>
-                ))}
+                {itemTitle == 'Ingredients' ? 
+                    item.items.map((listItem, index) => (
+                    <Text
+                        key={index}
+                        className={`pl-2 ${
+                        darkMode ? "text-darkGold" : "text-gray-700"
+                        }`}
+                    >
+                        - {listItem}
+                    </Text>
+                    ))
+                :
+                    item.steps.map((step, index) => (
+                        <Text
+                        key={index}
+                        className={`pl-2 ${
+                            darkMode ? "text-darkGold" : "text-gray-700"
+                        }`}
+                        >
+                        - {step.note}
+                        </Text>
+                    ))
+                }
               </View>
             )}
           />

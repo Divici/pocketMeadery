@@ -1,20 +1,17 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Button, FlatList, Modal } from "react-native";
-
-type EditStepGroupModalProps = {
-  visible: boolean;
-  onClose: () => void;
-  group: { date: string; steps: { date: string; note: string }[] };
-  onSave: (updatedSteps: { date: string; note: string }[]) => void;
-};
+import React, { useEffect, useState } from "react";
+import { View, TextInput, Button, FlatList, Modal, Text } from "react-native";
 
 export default function EditStepGroupModal({
   visible,
   onClose,
   group,
   onSave,
-}: EditStepGroupModalProps) {
-  const [editedSteps, setEditedSteps] = useState(group.steps);
+}) {
+  const [editedSteps, setEditedSteps] = useState(group?.steps || []);
+
+  useEffect(() => {
+    setEditedSteps(group?.steps || []);
+  }, [group]);
 
   const handleSave = () => {
     onSave(editedSteps);
@@ -27,9 +24,12 @@ export default function EditStepGroupModal({
     setEditedSteps(updated);
   };
 
+  if (!group) return null; // Safety check
+
   return (
     <Modal visible={visible} animationType="slide" transparent>
       <View className="w-3/4 bg-gray-200 p-4 rounded-lg mx-auto my-auto shadow-lg">
+        <Text className="text-lg font-bold mb-4">{group.date}</Text>
         <FlatList
           data={editedSteps}
           keyExtractor={(item, index) => index.toString()}

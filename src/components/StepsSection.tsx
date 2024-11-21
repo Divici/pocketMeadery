@@ -10,20 +10,9 @@ export default function StepsSection({
   onAddStep,
   onEditGroup,
 }) {
-  // Group steps by date
-  const groupedSteps = steps.reduce((groups, step) => {
-    const date = new Date(step.date).toDateString();
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(step);
-    return groups;
-  }, {});
-
-  const groupedStepsArray = Object.entries(groupedSteps).map(([date, steps]) => ({
-    date,
-    steps,
-  }));
+  const sortedSteps = [...steps].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   return (
     <View className="mb-6">
@@ -46,7 +35,10 @@ export default function StepsSection({
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={onAddStep} className="ml-4">
+        <TouchableOpacity 
+          onPress={onAddStep} 
+          className="ml-4"
+        >
           <MaterialIcons
             name={"add-circle"}
             size={36}
@@ -58,21 +50,20 @@ export default function StepsSection({
       {isExpanded && (
         <View style={{ maxHeight: "40VH" }}>
           <FlatList
-            data={groupedStepsArray}
-            keyExtractor={(item) => item.date}
+            data={sortedSteps}
+            keyExtractor={(item, index) => index.toString()}
             renderItem={({ item }) => (
               <View className="mb-4">
-                {/* Date Group Header */}
-                <View className="flex-row justify-between items-center mb-2">
+                <View className="flex-row justify-start items-center mb-2">
                   <Text
                     className={`text-sm font-bold ${
                       darkMode ? "text-darkGold" : "text-gray-700"
                     }`}
                   >
-                    {item.date}:
+                    {new Date(item.date).toDateString()}:
                   </Text>
                   <TouchableOpacity
-                    onPress={() => onEditGroup(item.date)}
+                    onPress={() => onEditGroup(new Date(item.date).toDateString())}
                     className="ml-4"
                   >
                     <MaterialIcons
@@ -83,7 +74,6 @@ export default function StepsSection({
                   </TouchableOpacity>
                 </View>
 
-                {/* Steps List */}
                 {item.steps.map((step, index) => (
                   <Text
                     key={index}
@@ -91,7 +81,7 @@ export default function StepsSection({
                       darkMode ? "text-darkGold" : "text-gray-700"
                     }`}
                   >
-                    <MaterialIcons name={"circle"} size={8} /> {step.note}
+                    - {step.note}
                   </Text>
                 ))}
               </View>
