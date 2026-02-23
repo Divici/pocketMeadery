@@ -20,6 +20,7 @@ import { lightTheme } from '../theme';
 import type { Batch, Step, Ingredient, BatchStatus } from '../db/types';
 import type { UnitsPreference } from '../lib/units';
 import { formatAmountForDisplay } from '../lib/units';
+import { formatDateMMDDYYYY } from '../lib/date';
 
 type Props = {
   batchId: string;
@@ -95,7 +96,7 @@ export function BatchDetailScreen({
       <View style={styles.header}>
         <Text style={styles.name}>{batch.name}</Text>
         <Text style={styles.meta}>
-          {batch.status} • Created {formatDate(batch.created_at)}
+          {batch.status} • Created {formatDateMMDDYYYY(batch.created_at)}
         </Text>
         {batch.batch_volume_value != null && batch.batch_volume_unit && (
           <Text style={styles.meta}>
@@ -187,7 +188,7 @@ export function BatchDetailScreen({
             <View style={styles.stepCard}>
               <View style={styles.stepHeader}>
                 <View style={styles.stepHeaderLeft}>
-                  <Text style={styles.stepDate}>{formatDate(item.occurred_at)}</Text>
+                  <Text style={styles.stepDate}>{formatDateMMDDYYYY(item.occurred_at)}</Text>
                   {item.gravity != null && (
                     <Text style={styles.stepGravity}>SG: {item.gravity}</Text>
                   )}
@@ -229,14 +230,6 @@ export function BatchDetailScreen({
       </View>
     </View>
   );
-}
-
-function formatDate(ms: number): string {
-  const d = new Date(ms);
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  const y = d.getFullYear();
-  return `${m.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${y}`;
 }
 
 const styles = StyleSheet.create({

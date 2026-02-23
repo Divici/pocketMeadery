@@ -16,6 +16,7 @@ import {
 } from '../db/repositories';
 import { recalculateBatchABV } from '../services/batchAbvService';
 import { lightTheme } from '../theme';
+import { formatDateMMDDYYYY, parseDateMMDDYYYY } from '../lib/date';
 
 type Props = {
   stepId: string;
@@ -23,24 +24,6 @@ type Props = {
   onSaved: () => void;
   onCancel: () => void;
 };
-
-function formatDateForInput(ms: number) {
-  const d = new Date(ms);
-  const m = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  const y = d.getFullYear();
-  return `${m}/${day}/${y}`;
-}
-
-function parseDateInput(s: string): number | null {
-  const match = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return null;
-  const [, m, day, y] = match;
-  const month = parseInt(m!, 10) - 1;
-  const d = new Date(parseInt(y!, 10), month, parseInt(day!, 10));
-  if (isNaN(d.getTime())) return null;
-  return d.getTime();
-}
 
 export function EditStepScreen({
   stepId,
@@ -64,7 +47,7 @@ export function EditStepScreen({
     getStepById(db, stepId).then((step) => {
       if (step) {
         setOccurredAt(step.occurred_at);
-        setDateInput(formatDateForInput(step.occurred_at));
+        setDateInput(formatDateMMDDYYYY(step.occurred_at));
         setTitle(step.title ?? '');
         setNotes(step.notes);
         setGravity(step.gravity != null ? String(step.gravity) : '');
@@ -94,7 +77,7 @@ export function EditStepScreen({
         previous_occurred_at: step.occurred_at,
       });
 
-      const parsed = parseDateInput(dateInput);
+      const parsed = parseDateMMDDYYYY(dateInput);
       const newOccurredAt = parsed ?? occurredAt;
 
       await updateStep(db, stepId, {
@@ -146,7 +129,7 @@ export function EditStepScreen({
         value={dateInput}
         onChangeText={(v) => {
           setDateInput(v);
-          const parsed = parseDateInput(v);
+          const parsed = parseDateMMDDYYYY(v);
           if (parsed != null) setOccurredAt(parsed);
         }}
         placeholder="MM/DD/YYYY"

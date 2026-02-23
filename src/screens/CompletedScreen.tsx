@@ -11,6 +11,7 @@ import { useDatabase } from '../context/DatabaseContext';
 import { listCompletedBatches } from '../db/repositories';
 import { lightTheme } from '../theme';
 import type { Batch } from '../db/types';
+import { formatDateMMDDYYYY } from '../lib/date';
 
 type Props = {
   onBatchPress: (batchId: string) => void;
@@ -56,7 +57,7 @@ export function CompletedScreen({ onBatchPress }: Props) {
             >
               <Text style={styles.batchName}>{item.name}</Text>
               <Text style={styles.batchMeta}>
-                {item.status} • {formatDate(item.updated_at)}
+                {item.status} • {formatDateMMDDYYYY(item.updated_at)}
               </Text>
             </Pressable>
           )}
@@ -64,14 +65,6 @@ export function CompletedScreen({ onBatchPress }: Props) {
       )}
     </View>
   );
-}
-
-function formatDate(ms: number): string {
-  const d = new Date(ms);
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  const y = d.getFullYear();
-  return `${m.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${y}`;
 }
 
 const styles = StyleSheet.create({

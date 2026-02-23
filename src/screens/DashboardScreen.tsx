@@ -14,6 +14,7 @@ import {
 } from '../db/repositories';
 import { lightTheme } from '../theme';
 import type { Batch, Reminder } from '../db/types';
+import { formatDateMMDDYYYY } from '../lib/date';
 
 type Props = {
   onNewBatch: () => void;
@@ -66,7 +67,7 @@ export function DashboardScreen({ onNewBatch, onBatchPress }: Props) {
               >
                 <Text style={styles.batchName}>{item.name}</Text>
                 <Text style={styles.batchMeta}>
-                  {item.status} • {formatDate(item.updated_at)}
+                  {item.status} • {formatDateMMDDYYYY(item.updated_at)}
                 </Text>
                 {item.current_abv != null && (
                   <Text style={styles.batchAbv}>
@@ -88,7 +89,7 @@ export function DashboardScreen({ onNewBatch, onBatchPress }: Props) {
             <View key={r.id} style={styles.reminderRow}>
               <Text style={styles.reminderTitle}>{r.title}</Text>
               <Text style={styles.reminderTime}>
-                {formatDate(r.scheduled_for)}
+                {formatDateMMDDYYYY(r.scheduled_for)}
               </Text>
             </View>
           ))
@@ -100,14 +101,6 @@ export function DashboardScreen({ onNewBatch, onBatchPress }: Props) {
       </Pressable>
     </View>
   );
-}
-
-function formatDate(ms: number): string {
-  const d = new Date(ms);
-  const m = d.getMonth() + 1;
-  const day = d.getDate();
-  const y = d.getFullYear();
-  return `${m.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${y}`;
 }
 
 const styles = StyleSheet.create({

@@ -18,6 +18,7 @@ import {
   requestNotificationPermission,
 } from '../notifications/notificationService';
 import { lightTheme } from '../theme';
+import { parseDateMMDDYYYY } from '../lib/date';
 
 type Props = {
   batchId: string;
@@ -55,7 +56,7 @@ export function AddReminderScreen({
     let title: string;
 
     if (useSpecificDate && specificDateInput.trim()) {
-      const parsed = parseDateInput(specificDateInput.trim());
+      const parsed = parseDateMMDDYYYY(specificDateInput.trim());
       if (!parsed) {
         setError('Invalid date. Use MM/DD/YYYY format.');
         setSaving(false);
@@ -209,16 +210,6 @@ export function AddReminderScreen({
       </View>
     </View>
   );
-}
-
-function parseDateInput(s: string): number | null {
-  const match = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (!match) return null;
-  const [, m, day, y] = match;
-  const month = parseInt(m!, 10) - 1;
-  const d = new Date(parseInt(y!, 10), month, parseInt(day!, 10));
-  if (isNaN(d.getTime())) return null;
-  return d.getTime();
 }
 
 const styles = StyleSheet.create({
