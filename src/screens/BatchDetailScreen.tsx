@@ -13,9 +13,10 @@ import {
   getBatchById,
   listStepsByBatch,
   listIngredientsByBatch,
+  updateBatch,
 } from '../db/repositories';
 import { lightTheme } from '../theme';
-import type { Batch, Step, Ingredient } from '../db/types';
+import type { Batch, Step, Ingredient, BatchStatus } from '../db/types';
 
 type Props = {
   batchId: string;
@@ -34,6 +35,13 @@ export function BatchDetailScreen({
   onEditStep,
   onEditIngredient,
 }: Props) {
+  const STATUSES: BatchStatus[] = [
+    'ACTIVE_PRIMARY',
+    'SECONDARY',
+    'AGING',
+    'BOTTLED',
+    'ARCHIVED',
+  ];
   const { db } = useDatabase();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
@@ -59,6 +67,15 @@ export function BatchDetailScreen({
     }, [load])
   );
 
+  const handleStatusUpdate = useCallback(
+    async (status: BatchStatus) => {
+      if (!db || !batch || batch.status === status) return;
+      await updateBatch(db, batch.id, { status });
+      await load();
+    },
+    [db, batch, load]
+  );
+
   if (loading || !batch) {
     return (
       <View style={styles.centered}>
@@ -74,6 +91,27 @@ export function BatchDetailScreen({
         <Text style={styles.meta}>
           {batch.status} • Created {formatDate(batch.created_at)}
         </Text>
+        <View style={styles.statusChips}>
+          {STATUSES.map((status) => (
+            <Pressable
+              key={status}
+              onPress={() => handleStatusUpdate(status)}
+              style={[
+                styles.statusChip,
+                batch.status === status && styles.statusChipSelected,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusChipText,
+                  batch.status === status && styles.statusChipTextSelected,
+                ]}
+              >
+                {status.replace('_', ' ')}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
         <View style={styles.abvRow}>
           {batch.goal_abv != null && (
             <Text style={styles.abv}>Goal: {batch.goal_abv}%</Text>
@@ -205,6 +243,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: lightTheme.muted,
     marginTop: 4,
+  },
+  statusChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  statusChip: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    backgroundColor: lightTheme.surface,
+  },
+  statusChipSelected: {
+    borderColor: lightTheme.primary,
+    backgroundColor: lightTheme.primary,
+  },
+  statusChipText: {
+    fontSize: 11,
+    color: lightTheme.text,
+  },
+  statusChipTextSelected: {
+    color: '#fff',
   },
   abvRow: {
     flexDirection: 'row',
