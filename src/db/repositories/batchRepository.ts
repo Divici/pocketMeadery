@@ -1,16 +1,9 @@
+import { uuid } from '../../lib/uuid';
 import type { DbAdapter } from '../DbAdapter';
 import type { Batch, BatchStatus, CreateBatchInput } from '../types';
 
 const ACTIVE_STATUSES: BatchStatus[] = ['ACTIVE_PRIMARY', 'SECONDARY', 'AGING'];
 const COMPLETED_STATUSES: BatchStatus[] = ['BOTTLED', 'ARCHIVED'];
-
-function uuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
 
 export async function createBatch(
   db: DbAdapter,
