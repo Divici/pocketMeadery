@@ -16,6 +16,7 @@ import { AddStepScreen } from '../screens/AddStepScreen';
 import { AddIngredientScreen } from '../screens/AddIngredientScreen';
 import { AddReminderScreen } from '../screens/AddReminderScreen';
 import { EditStepScreen } from '../screens/EditStepScreen';
+import { EditIngredientScreen } from '../screens/EditIngredientScreen';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { lightTheme } from '../theme';
 
@@ -27,6 +28,7 @@ export type RootStackParamList = {
   AddIngredient: { batchId: string };
   AddReminder: { batchId: string; batchName?: string };
   EditStep: { stepId: string; batchId: string };
+  EditIngredient: { ingredientId: string };
 };
 
 export const navigationRef = createNavigationContainerRef<RootStackParamList>();
@@ -94,6 +96,7 @@ function CompletedTab({ navigation }: { navigation: any }) {
 
 function AppNavigatorContent() {
   const { db, error, ready } = useDatabase();
+  useNotificationDeepLink();
 
   if (!ready) {
     return (
@@ -110,8 +113,6 @@ function AppNavigatorContent() {
       </View>
     );
   }
-
-  useNotificationDeepLink();
 
   return (
     <NavigationContainer ref={navigationRef}>
@@ -156,6 +157,11 @@ function AppNavigatorContent() {
           component={EditStepScreenWrapper}
           options={{ title: 'Edit Step' }}
         />
+        <Stack.Screen
+          name="EditIngredient"
+          component={EditIngredientScreenWrapper}
+          options={{ title: 'Edit Ingredient' }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -190,6 +196,9 @@ function BatchDetailScreenWrapper({
       }
       onEditStep={(stepId) =>
         navigation.navigate('EditStep', { stepId, batchId })
+      }
+      onEditIngredient={(ingredientId) =>
+        navigation.navigate('EditIngredient', { ingredientId })
       }
     />
   );
@@ -259,6 +268,23 @@ function EditStepScreenWrapper({
     <EditStepScreen
       stepId={stepId}
       batchId={batchId}
+      onSaved={() => navigation.goBack()}
+      onCancel={() => navigation.goBack()}
+    />
+  );
+}
+
+function EditIngredientScreenWrapper({
+  navigation,
+  route,
+}: {
+  navigation: any;
+  route: { params: { ingredientId: string } };
+}) {
+  const { ingredientId } = route.params;
+  return (
+    <EditIngredientScreen
+      ingredientId={ingredientId}
       onSaved={() => navigation.goBack()}
       onCancel={() => navigation.goBack()}
     />

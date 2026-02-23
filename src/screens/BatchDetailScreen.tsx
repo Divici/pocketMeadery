@@ -23,7 +23,7 @@ type Props = {
   onAddIngredient: (batchId: string) => void;
   onAddReminder: (batchId: string, batchName?: string) => void;
   onEditStep?: (stepId: string) => void;
-  onFocus?: () => void;
+  onEditIngredient?: (ingredientId: string) => void;
 };
 
 export function BatchDetailScreen({
@@ -32,6 +32,7 @@ export function BatchDetailScreen({
   onAddIngredient,
   onAddReminder,
   onEditStep,
+  onEditIngredient,
 }: Props) {
   const { db } = useDatabase();
   const [batch, setBatch] = useState<Batch | null>(null);
@@ -97,11 +98,21 @@ export function BatchDetailScreen({
       ) : (
         ingredients.map((ing) => (
           <View key={ing.id} style={styles.ingredientRow}>
-            <Text style={styles.ingredientName}>{ing.name}</Text>
-            {ing.amount_value != null && (
-              <Text style={styles.ingredientAmount}>
-                {ing.amount_value} {ing.amount_unit ?? ''}
-              </Text>
+            <View>
+              <Text style={styles.ingredientName}>{ing.name}</Text>
+              {ing.amount_value != null && (
+                <Text style={styles.ingredientAmount}>
+                  {ing.amount_value} {ing.amount_unit ?? ''}
+                </Text>
+              )}
+            </View>
+            {onEditIngredient && (
+              <Pressable
+                onPress={() => onEditIngredient(ing.id)}
+                style={styles.editBtn}
+              >
+                <Text style={styles.editBtnText}>✎</Text>
+              </Pressable>
             )}
           </View>
         ))
