@@ -13,10 +13,13 @@ import {
   getBatchById,
   listStepsByBatch,
   listIngredientsByBatch,
+  getSetting,
   updateBatch,
 } from '../db/repositories';
 import { lightTheme } from '../theme';
 import type { Batch, Step, Ingredient, BatchStatus } from '../db/types';
+import type { UnitsPreference } from '../lib/units';
+import { formatAmountForDisplay } from '../lib/units';
 
 type Props = {
   batchId: string;
@@ -46,18 +49,21 @@ export function BatchDetailScreen({
   const [batch, setBatch] = useState<Batch | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [unitsPreference, setUnitsPreference] = useState<UnitsPreference>('US');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!db) return;
-    const [b, s, i] = await Promise.all([
+    const [b, s, i, units] = await Promise.all([
       getBatchById(db, batchId),
       listStepsByBatch(db, batchId),
       listIngredientsByBatch(db, batchId),
+      getSetting(db, 'units'),
     ]);
     setBatch(b ?? null);
     setSteps(s);
     setIngredients(i);
+    setUnitsPreference(units === 'metric' ? 'metric' : 'US');
     setLoading(false);
   }, [db, batchId]);
 
@@ -91,6 +97,16 @@ export function BatchDetailScreen({
         <Text style={styles.meta}>
           {batch.status} • Created {formatDate(batch.created_at)}
         </Text>
+        {batch.batch_volume_value != null && batch.batch_volume_unit && (
+          <Text style={styles.meta}>
+            Volume:{' '}
+            {formatAmountForDisplay(
+              batch.batch_volume_value,
+              batch.batch_volume_unit,
+              unitsPreference
+            )}
+          </Text>
+        )}
         <View style={styles.statusChips}>
           {STATUSES.map((status) => (
             <Pressable
@@ -140,7 +156,11 @@ export function BatchDetailScreen({
               <Text style={styles.ingredientName}>{ing.name}</Text>
               {ing.amount_value != null && (
                 <Text style={styles.ingredientAmount}>
-                  {ing.amount_value} {ing.amount_unit ?? ''}
+                  {formatAmountForDisplay(
+                    ing.amount_value,
+                    ing.amount_unit,
+                    unitsPreference
+                  ) ?? ''}
                 </Text>
               )}
             </View>
