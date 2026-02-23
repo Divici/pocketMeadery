@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   ActivityIndicator,
   FlatList,
@@ -20,7 +21,9 @@ type Props = {
   batchId: string;
   onAddStep: (batchId: string) => void;
   onAddIngredient: (batchId: string) => void;
-  onAddReminder: (batchId: string) => void;
+  onAddReminder: (batchId: string, batchName?: string) => void;
+  onEditStep?: (stepId: string) => void;
+  onFocus?: () => void;
 };
 
 export function BatchDetailScreen({
@@ -28,6 +31,7 @@ export function BatchDetailScreen({
   onAddStep,
   onAddIngredient,
   onAddReminder,
+  onEditStep,
 }: Props) {
   const { db } = useDatabase();
   const [batch, setBatch] = useState<Batch | null>(null);
@@ -48,9 +52,11 @@ export function BatchDetailScreen({
     setLoading(false);
   }, [db, batchId]);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   if (loading || !batch) {
     return (
@@ -111,9 +117,19 @@ export function BatchDetailScreen({
           renderItem={({ item }) => (
             <View style={styles.stepCard}>
               <View style={styles.stepHeader}>
-                <Text style={styles.stepDate}>{formatDate(item.occurred_at)}</Text>
-                {item.gravity != null && (
-                  <Text style={styles.stepGravity}>SG: {item.gravity}</Text>
+                <View style={styles.stepHeaderLeft}>
+                  <Text style={styles.stepDate}>{formatDate(item.occurred_at)}</Text>
+                  {item.gravity != null && (
+                    <Text style={styles.stepGravity}>SG: {item.gravity}</Text>
+                  )}
+                </View>
+                {onEditStep && (
+                  <Pressable
+                    onPress={() => onEditStep(item.id)}
+                    style={styles.editBtn}
+                  >
+                    <Text style={styles.editBtnText}>✎</Text>
+                  </Pressable>
                 )}
               </View>
               {item.title && (
@@ -137,7 +153,7 @@ export function BatchDetailScreen({
         </Pressable>
         <Pressable
           style={styles.actionBtn}
-          onPress={() => onAddReminder(batchId)}
+          onPress={() => onAddReminder(batchId, batch.name)}
         >
           <Text style={styles.actionBtnText}>Add Reminder</Text>
         </Pressable>
@@ -226,6 +242,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  stepHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  editBtn: {
+    padding: 4,
+  },
+  editBtnText: {
+    fontSize: 16,
+    color: lightTheme.primary,
   },
   stepDate: {
     fontSize: 14,
