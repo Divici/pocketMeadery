@@ -1,0 +1,42 @@
+---
+description: Enforce test-driven development as primary workflow
+alwaysApply: true
+---
+
+# TDD First Rule (Project-Wide)
+
+- Use TDD as the default method for all code changes: **Red -> Green -> Refactor**.
+- Start by writing or updating a failing test that defines the expected behavior.
+- Only write production code after the test fails for the right reason.
+- Implement the smallest change needed to pass tests, then refactor safely.
+- Keep tests focused on behavior and user outcomes, not internal implementation details.
+
+## Required by Work Type
+
+- **Frontend/UI (components, hooks, screens):** write component or interaction tests first, then implement UI.
+- **API/routes/controllers:** write request/response and error-path tests first, then implement handlers.
+- **Business logic/services/utils:** write unit tests first for happy path + edge cases, then implement logic.
+- **Data layer (SQLite/repositories):** write tests for reads/writes/migrations first, then implement data code.
+
+## Minimum Change Checklist
+
+- New behavior has at least one failing test added first.
+- Existing behavior changes include updated tests first.
+- Bug fixes start with a regression test that fails before the fix.
+- Final state: all tests pass and no removed coverage for touched behavior.
+
+## Example (Component)
+
+```tsx
+// 1) RED: write failing test for button click behavior
+// 2) GREEN: add minimal component code to pass
+// 3) REFACTOR: improve naming/structure while tests stay green
+```
+
+## Example (API)
+
+```ts
+// 1) RED: test POST /batches returns 201 and validation errors
+// 2) GREEN: implement minimal route + validation handling
+// 3) REFACTOR: extract shared validation/service logic
+```

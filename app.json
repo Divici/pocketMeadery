@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Pocket Meadery",
+    "slug": "pocket-meadery",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6B1F1A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pocketmeadery.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#6B1F1A",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "package": "com.pocketmeadery.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
+  }
+}
