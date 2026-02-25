@@ -1,9 +1,14 @@
 import { useState } from 'react';
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useDatabase } from '../context/DatabaseContext';
@@ -60,8 +65,13 @@ export function CreateBatchScreen({ onCreated, onCancel }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>New Batch</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>New Batch</Text>
 
       <Text style={styles.label}>Name *</Text>
       <TextInput
@@ -123,21 +133,23 @@ export function CreateBatchScreen({ onCreated, onCancel }: Props) {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <View style={styles.actions}>
-        <Pressable
-          style={[styles.btn, styles.btnPrimary]}
-          onPress={handleCreate}
-          disabled={saving}
-        >
-          <Text style={styles.btnPrimaryText}>
-            {saving ? 'Creating...' : 'Create'}
-          </Text>
-        </Pressable>
-        <Pressable style={styles.btn} onPress={onCancel}>
-          <Text style={styles.btnSecondaryText}>Cancel</Text>
-        </Pressable>
-      </View>
-    </View>
+          <View style={styles.actions}>
+            <Pressable
+              style={[styles.btn, styles.btnPrimary]}
+              onPress={handleCreate}
+              disabled={saving}
+            >
+              <Text style={styles.btnPrimaryText}>
+                {saving ? 'Creating...' : 'Create'}
+              </Text>
+            </Pressable>
+            <Pressable style={styles.btn} onPress={onCancel}>
+              <Text style={styles.btnSecondaryText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 

@@ -60,10 +60,9 @@ function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={{
+        headerShown: false,
         tabBarActiveTintColor: lightTheme.primary,
         tabBarInactiveTintColor: lightTheme.muted,
-        headerStyle: { backgroundColor: lightTheme.surface },
-        headerTintColor: lightTheme.primary,
       }}
     >
       <Tab.Screen name="Dashboard" component={DashboardTab} />

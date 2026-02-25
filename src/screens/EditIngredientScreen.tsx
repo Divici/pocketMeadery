@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import { useDatabase } from '../context/DatabaseContext';
@@ -88,8 +93,13 @@ export function EditIngredientScreen({
   if (loading) return null;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Edit Ingredient</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView keyboardShouldPersistTaps="handled">
+          <Text style={styles.title}>Edit Ingredient</Text>
 
       <Text style={styles.label}>Name *</Text>
       <TextInput
@@ -151,21 +161,23 @@ export function EditIngredientScreen({
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      <View style={styles.actions}>
-        <Pressable
-          style={[styles.btn, styles.btnPrimary]}
-          onPress={handleSave}
-          disabled={saving}
-        >
-          <Text style={styles.btnPrimaryText}>
-            {saving ? 'Saving...' : 'Save'}
-          </Text>
-        </Pressable>
-        <Pressable style={styles.btn} onPress={onCancel}>
-          <Text style={styles.btnSecondaryText}>Cancel</Text>
-        </Pressable>
-      </View>
-    </View>
+          <View style={styles.actions}>
+            <Pressable
+              style={[styles.btn, styles.btnPrimary]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              <Text style={styles.btnPrimaryText}>
+                {saving ? 'Saving...' : 'Save'}
+              </Text>
+            </Pressable>
+            <Pressable style={styles.btn} onPress={onCancel}>
+              <Text style={styles.btnSecondaryText}>Cancel</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 }
 
