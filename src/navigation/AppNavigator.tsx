@@ -61,8 +61,20 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: lightTheme.primary,
-        tabBarInactiveTintColor: lightTheme.muted,
+        tabBarShowIcon: false,
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: lightTheme.accent,
+        tabBarStyle: {
+          backgroundColor: lightTheme.primary,
+          borderTopWidth: 0,
+        },
+        tabBarItemStyle: {
+          borderRightWidth: 1,
+          borderRightColor: 'rgba(255,255,255,0.25)',
+        },
+        tabBarLabelStyle: {
+          fontWeight: '600',
+        },
       }}
     >
       <Tab.Screen name="Dashboard" component={DashboardTab} />
@@ -134,7 +146,7 @@ function AppNavigatorContent() {
         <Stack.Screen
           name="BatchDetail"
           component={BatchDetailScreenWrapper}
-          options={{ title: 'Batch' }}
+          options={{ title: 'Batch', headerBackTitle: 'All Meads' }}
         />
         <Stack.Screen
           name="AddStep"

@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import { useDatabase } from '../context/DatabaseContext';
@@ -14,13 +15,14 @@ import {
   listStepsByBatch,
   listIngredientsByBatch,
   getSetting,
+  listUpcomingRemindersByBatch,
   updateBatch,
 } from '../db/repositories';
 import { lightTheme } from '../theme';
-import type { Batch, Step, Ingredient, BatchStatus } from '../db/types';
+import type { Batch, Step, Ingredient, BatchStatus, Reminder } from '../db/types';
 import type { UnitsPreference } from '../lib/units';
 import { formatAmountForDisplay } from '../lib/units';
-import { formatDateMMDDYYYY } from '../lib/date';
+import { formatDateMMDDYYYY, parseDateMMDDYYYY } from '../lib/date';
 
 type Props = {
   batchId: string;
@@ -50,21 +52,30 @@ export function BatchDetailScreen({
   const [batch, setBatch] = useState<Batch | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [unitsPreference, setUnitsPreference] = useState<UnitsPreference>('US');
+  const [createdDateInput, setCreatedDateInput] = useState('');
+  const [goalAbvInput, setGoalAbvInput] = useState('');
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!db) return;
-    const [b, s, i, units] = await Promise.all([
+    const [b, s, i, r, units] = await Promise.all([
       getBatchById(db, batchId),
       listStepsByBatch(db, batchId),
       listIngredientsByBatch(db, batchId),
+      listUpcomingRemindersByBatch(db, batchId, 3),
       getSetting(db, 'units'),
     ]);
     setBatch(b ?? null);
     setSteps(s);
     setIngredients(i);
+    setReminders(r);
     setUnitsPreference(units === 'metric' ? 'metric' : 'US');
+    if (b) {
+      setCreatedDateInput(formatDateMMDDYYYY(b.created_at));
+      setGoalAbvInput(b.goal_abv != null ? String(b.goal_abv) : '');
+    }
     setLoading(false);
   }, [db, batchId]);
 
@@ -83,6 +94,23 @@ export function BatchDetailScreen({
     [db, batch, load]
   );
 
+  const getStatusLabel = (status: BatchStatus) => {
+    if (status === 'ACTIVE_PRIMARY') return 'Active';
+    return status.replace('_', ' ');
+  };
+
+  const handleHeaderSave = useCallback(async () => {
+    if (!db || !batch) return;
+    const created = parseDateMMDDYYYY(createdDateInput.trim());
+    if (created == null) return;
+    const parsedGoal = goalAbvInput.trim();
+    await updateBatch(db, batch.id, {
+      created_at: created,
+      goal_abv: parsedGoal ? parseFloat(parsedGoal) : null,
+    });
+    await load();
+  }, [db, batch, createdDateInput, goalAbvInput, load]);
+
   if (loading || !batch) {
     return (
       <View style={styles.centered}>
@@ -96,7 +124,7 @@ export function BatchDetailScreen({
       <View style={styles.header}>
         <Text style={styles.name}>{batch.name}</Text>
         <Text style={styles.meta}>
-          {batch.status} • Created {formatDateMMDDYYYY(batch.created_at)}
+          {getStatusLabel(batch.status)} • Created {formatDateMMDDYYYY(batch.created_at)}
         </Text>
         {batch.batch_volume_value != null && batch.batch_volume_unit && (
           <Text style={styles.meta}>
@@ -144,6 +172,33 @@ export function BatchDetailScreen({
             batch.current_abv == null && (
               <Text style={styles.abv}>ABV: —</Text>
             )}
+        </View>
+        {reminders.length > 0 && (
+          <View style={styles.reminderBanner}>
+            <Text style={styles.reminderBannerText}>{reminders[0].title}</Text>
+          </View>
+        )}
+        <View style={styles.headerEditor}>
+          <Text style={styles.headerEditorLabel}>Created Date (MM/DD/YYYY)</Text>
+          <TextInput
+            style={styles.headerEditorInput}
+            value={createdDateInput}
+            onChangeText={setCreatedDateInput}
+            placeholder="MM/DD/YYYY"
+            placeholderTextColor={lightTheme.muted}
+          />
+          <Text style={styles.headerEditorLabel}>Goal ABV</Text>
+          <TextInput
+            style={styles.headerEditorInput}
+            value={goalAbvInput}
+            onChangeText={setGoalAbvInput}
+            placeholder="e.g. 14"
+            placeholderTextColor={lightTheme.muted}
+            keyboardType="decimal-pad"
+          />
+          <Pressable style={styles.saveHeaderBtn} onPress={handleHeaderSave}>
+            <Text style={styles.saveHeaderBtnText}>Save Header Changes</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -290,6 +345,47 @@ const styles = StyleSheet.create({
   abv: {
     fontSize: 12,
     color: lightTheme.accent,
+  },
+  reminderBanner: {
+    marginTop: 10,
+    width: '100%',
+    backgroundColor: '#D4A843',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  reminderBannerText: {
+    textAlign: 'center',
+    color: '#111',
+    fontWeight: '700',
+  },
+  headerEditor: {
+    marginTop: 12,
+    gap: 6,
+  },
+  headerEditorLabel: {
+    fontSize: 12,
+    color: lightTheme.muted,
+  },
+  headerEditorInput: {
+    backgroundColor: lightTheme.surface,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    color: lightTheme.text,
+  },
+  saveHeaderBtn: {
+    marginTop: 8,
+    backgroundColor: lightTheme.primary,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  saveHeaderBtnText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   sectionTitle: {
     fontSize: 18,

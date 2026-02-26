@@ -29,6 +29,12 @@ export const REMINDER_TEMPLATES = {
     defaultTitle: 'Bottle',
     unit: 'days' as const,
   },
+  OTHER: {
+    key: 'OTHER',
+    label: 'Other (custom reminder)',
+    defaultTitle: 'Reminder',
+    unit: 'days' as const,
+  },
 } as const;
 
 export type ReminderTemplateKey = keyof typeof REMINDER_TEMPLATES;

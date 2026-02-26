@@ -24,6 +24,7 @@ const INGREDIENT_TYPES: IngredientType[] = [
   'ADDITION',
   'OTHER',
 ];
+const AMOUNT_UNITS = ['', 'lb', 'kg', 'oz', 'g', 'gal', 'L'];
 
 type Props = {
   batchId: string;
@@ -36,6 +37,7 @@ export function AddIngredientScreen({ batchId, onSaved, onCancel }: Props) {
   const [name, setName] = useState('');
   const [amountValue, setAmountValue] = useState('');
   const [amountUnit, setAmountUnit] = useState('');
+  const [showUnitOptions, setShowUnitOptions] = useState(false);
   const [ingredientType, setIngredientType] = useState<IngredientType | null>(null);
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
@@ -95,13 +97,30 @@ export function AddIngredientScreen({ batchId, onSaved, onCancel }: Props) {
           keyboardType="decimal-pad"
           placeholderTextColor={lightTheme.muted}
         />
-        <TextInput
-          style={[styles.input, styles.inputSmall]}
-          value={amountUnit}
-          onChangeText={setAmountUnit}
-          placeholder="lb, kg, oz, g"
-          placeholderTextColor={lightTheme.muted}
-        />
+        <View style={styles.inputSmall}>
+          <Pressable
+            style={[styles.input, styles.unitSelectBox]}
+            onPress={() => setShowUnitOptions((v) => !v)}
+          >
+            <Text style={styles.unitSelectText}>{amountUnit || 'Select unit'}</Text>
+          </Pressable>
+          {showUnitOptions && (
+            <View style={styles.unitOptions}>
+              {AMOUNT_UNITS.filter(Boolean).map((u) => (
+                <Pressable
+                  key={u}
+                  style={styles.unitOption}
+                  onPress={() => {
+                    setAmountUnit(u);
+                    setShowUnitOptions(false);
+                  }}
+                >
+                  <Text style={styles.unitOptionText}>{u}</Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
 
       <Text style={styles.label}>Type (optional)</Text>
@@ -189,6 +208,31 @@ const styles = StyleSheet.create({
   inputSmall: {
     flex: 1,
     marginBottom: 0,
+  },
+  unitSelectBox: {
+    justifyContent: 'center',
+  },
+  unitSelectText: {
+    color: lightTheme.text,
+    fontSize: 16,
+  },
+  unitOptions: {
+    backgroundColor: lightTheme.surface,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+    borderRadius: 8,
+    marginTop: -8,
+    marginBottom: 8,
+    overflow: 'hidden',
+  },
+  unitOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: lightTheme.border,
+  },
+  unitOptionText: {
+    color: lightTheme.text,
   },
   row: {
     flexDirection: 'row',

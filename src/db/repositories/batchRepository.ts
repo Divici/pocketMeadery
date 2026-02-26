@@ -64,7 +64,7 @@ export async function listCompletedBatches(db: DbAdapter): Promise<Batch[]> {
 export type UpdateBatchInput = Partial<
   Pick<
     Batch,
-    'name' | 'status' | 'batch_volume_value' | 'batch_volume_unit' | 'notes' | 'goal_abv' | 'expected_abv' | 'current_abv'
+    'name' | 'created_at' | 'status' | 'batch_volume_value' | 'batch_volume_unit' | 'notes' | 'goal_abv' | 'expected_abv' | 'current_abv'
   >
 >;
 
@@ -79,6 +79,10 @@ export async function updateBatch(
   if (input.name !== undefined) {
     updates.push('name = ?');
     values.push(input.name);
+  }
+  if (input.created_at !== undefined) {
+    updates.push('created_at = ?');
+    values.push(input.created_at);
   }
   if (input.status !== undefined) {
     updates.push('status = ?');
@@ -121,4 +125,8 @@ export async function updateBatch(
   );
 
   return getBatchById(db, id);
+}
+
+export async function deleteBatch(db: DbAdapter, id: string): Promise<void> {
+  await db.runAsync('DELETE FROM batches WHERE id = ?', id);
 }

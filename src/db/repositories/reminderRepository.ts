@@ -48,6 +48,18 @@ export async function listUpcomingReminders(
   );
 }
 
+export async function listUpcomingRemindersByBatch(
+  db: DbAdapter,
+  batchId: string,
+  limit: number = 10
+): Promise<Reminder[]> {
+  return db.getAllAsync<Reminder>(
+    'SELECT * FROM reminders WHERE batch_id = ? AND is_completed = 0 ORDER BY scheduled_for ASC LIMIT ?',
+    batchId,
+    limit
+  );
+}
+
 export type UpdateReminderInput = Partial<
   Pick<Reminder, 'title' | 'body' | 'scheduled_for' | 'notification_id'>
 >;

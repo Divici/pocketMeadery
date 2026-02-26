@@ -43,6 +43,8 @@ export function AddReminderScreen({
   const { db } = useDatabase();
   const [templateKey, setTemplateKey] = useState<ReminderTemplateKey>('RACK_IN_DAYS');
   const [value, setValue] = useState('7');
+  const [customTitle, setCustomTitle] = useState('');
+  const [customUnit, setCustomUnit] = useState<'hours' | 'days'>('days');
   const [useSpecificDate, setUseSpecificDate] = useState(false);
   const [specificDateInput, setSpecificDateInput] = useState('');
   const [saving, setSaving] = useState(false);
@@ -68,7 +70,7 @@ export function AddReminderScreen({
         return;
       }
       scheduledFor = parsed;
-      title = template.defaultTitle;
+      title = templateKey === 'OTHER' ? customTitle.trim() : template.defaultTitle;
     } else {
       const num = parseInt(value, 10);
       if (isNaN(num) || num < 1) {
@@ -76,8 +78,22 @@ export function AddReminderScreen({
         setSaving(false);
         return;
       }
-      scheduledFor = getScheduledForFromRelative(templateKey, num);
-      title = template.defaultTitle;
+      if (templateKey === 'OTHER') {
+        const now = Date.now();
+        scheduledFor =
+          customUnit === 'hours'
+            ? now + num * 60 * 60 * 1000
+            : now + num * 24 * 60 * 60 * 1000;
+      } else {
+        scheduledFor = getScheduledForFromRelative(templateKey, num);
+      }
+      title = templateKey === 'OTHER' ? customTitle.trim() : template.defaultTitle;
+    }
+
+    if (!title) {
+      setError('Please provide a reminder title');
+      setSaving(false);
+      return;
     }
 
     if (scheduledFor <= Date.now()) {
@@ -159,16 +175,71 @@ export function AddReminderScreen({
         })}
       </View>
 
+      {templateKey === 'OTHER' && (
+        <>
+          <Text style={styles.label}>Custom Reminder Text</Text>
+          <TextInput
+            style={styles.input}
+            value={customTitle}
+            onChangeText={setCustomTitle}
+            placeholder="e.g. Check airlock"
+            placeholderTextColor={lightTheme.muted}
+          />
+        </>
+      )}
+
       {!useSpecificDate && (
         <>
           <Text style={styles.label}>
-            {template.unit === 'days' ? 'Days from now' : 'Hours from now'}
+            {(templateKey === 'OTHER' ? customUnit : template.unit) === 'days'
+              ? 'Days from now'
+              : 'Hours from now'}
           </Text>
+          {templateKey === 'OTHER' && (
+            <View style={styles.unitChipRow}>
+              <Pressable
+                style={[
+                  styles.unitChip,
+                  customUnit === 'hours' && styles.unitChipSelected,
+                ]}
+                onPress={() => setCustomUnit('hours')}
+              >
+                <Text
+                  style={[
+                    styles.unitChipText,
+                    customUnit === 'hours' && styles.unitChipTextSelected,
+                  ]}
+                >
+                  Hours
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.unitChip,
+                  customUnit === 'days' && styles.unitChipSelected,
+                ]}
+                onPress={() => setCustomUnit('days')}
+              >
+                <Text
+                  style={[
+                    styles.unitChipText,
+                    customUnit === 'days' && styles.unitChipTextSelected,
+                  ]}
+                >
+                  Days
+                </Text>
+              </Pressable>
+            </View>
+          )}
           <TextInput
             style={styles.input}
             value={value}
             onChangeText={setValue}
-            placeholder={template.unit === 'days' ? 'e.g. 7' : 'e.g. 24'}
+            placeholder={
+              (templateKey === 'OTHER' ? customUnit : template.unit) === 'days'
+                ? 'e.g. 7'
+                : 'e.g. 24'
+            }
             keyboardType="number-pad"
             placeholderTextColor={lightTheme.muted}
           />
@@ -273,6 +344,28 @@ const styles = StyleSheet.create({
     color: lightTheme.text,
   },
   chipTextSelected: {
+    color: '#fff',
+  },
+  unitChipRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 10,
+  },
+  unitChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: lightTheme.border,
+  },
+  unitChipSelected: {
+    backgroundColor: lightTheme.primary,
+    borderColor: lightTheme.primary,
+  },
+  unitChipText: {
+    color: lightTheme.text,
+  },
+  unitChipTextSelected: {
     color: '#fff',
   },
   toggle: {
