@@ -13,15 +13,26 @@ import { listCompletedBatches } from '../db/repositories';
 import { lightTheme } from '../theme';
 import type { Batch } from '../db/types';
 import { formatDateMMDDYYYY } from '../lib/date';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Props = {
   onBatchPress: (batchId: string) => void;
 };
 
 export function CompletedScreen({ onBatchPress }: Props) {
+  const insets = useSafeAreaInsets();
   const { db } = useDatabase();
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getStatusLabel = (status: Batch['status']) => {
+    if (status === 'ACTIVE_PRIMARY') return 'Active';
+    return status
+      .toLowerCase()
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+  };
 
   const load = useCallback(async () => {
     if (!db) return;
@@ -49,7 +60,7 @@ export function CompletedScreen({ onBatchPress }: Props) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8 }]}>
       <Text style={styles.title}>Completed Batches</Text>
       {batches.length === 0 ? (
         <Text style={styles.empty}>No completed batches</Text>
@@ -64,7 +75,7 @@ export function CompletedScreen({ onBatchPress }: Props) {
             >
               <Text style={styles.batchName}>{item.name}</Text>
               <Text style={styles.batchMeta}>
-                {item.status} • {formatDateMMDDYYYY(item.updated_at)}
+                {getStatusLabel(item.status)} • {formatDateMMDDYYYY(item.updated_at)}
               </Text>
             </Pressable>
           )}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { openDatabase, type Database } from '../db';
+import { ensureMockDataSeeded } from '../db/seedMockData';
 
 type DatabaseContextValue = {
   db: Database | null;
@@ -20,7 +21,10 @@ export function DatabaseProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     openDatabase()
-      .then(setDb)
+      .then(async (database) => {
+        await ensureMockDataSeeded(database);
+        setDb(database);
+      })
       .catch(setError)
       .finally(() => setReady(true));
   }, []);

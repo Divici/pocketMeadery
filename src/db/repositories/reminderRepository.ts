@@ -48,6 +48,50 @@ export async function listUpcomingReminders(
   );
 }
 
+export type ReminderWithBatchName = Reminder & {
+  batch_name: string | null;
+};
+
+export async function listUpcomingRemindersWithBatchName(
+  db: DbAdapter,
+  limit: number = 10
+): Promise<ReminderWithBatchName[]> {
+  return db.getAllAsync<ReminderWithBatchName>(
+    `SELECT r.*, b.name as batch_name
+     FROM reminders r
+     LEFT JOIN batches b ON b.id = r.batch_id
+     WHERE r.is_completed = 0
+     ORDER BY r.scheduled_for ASC
+     LIMIT ?`,
+    limit
+  );
+}
+
+export async function listNextReminderPerBatchWithBatchName(
+  db: DbAdapter,
+  limit: number = 10
+): Promise<ReminderWithBatchName[]> {
+  return db.getAllAsync<ReminderWithBatchName>(
+    `SELECT r.*, b.name as batch_name
+     FROM reminders r
+     LEFT JOIN batches b ON b.id = r.batch_id
+     WHERE r.is_completed = 0
+       AND NOT EXISTS (
+         SELECT 1
+         FROM reminders r2
+         WHERE r2.batch_id = r.batch_id
+           AND r2.is_completed = 0
+           AND (
+             r2.scheduled_for < r.scheduled_for
+             OR (r2.scheduled_for = r.scheduled_for AND r2.id < r.id)
+           )
+       )
+     ORDER BY r.scheduled_for ASC
+     LIMIT ?`,
+    limit
+  );
+}
+
 export async function listUpcomingRemindersByBatch(
   db: DbAdapter,
   batchId: string,
@@ -115,4 +159,8 @@ export async function markReminderCompleted(
     id
   );
   return getReminderById(db, id);
+}
+
+export async function deleteReminder(db: DbAdapter, id: string): Promise<void> {
+  await db.runAsync('DELETE FROM reminders WHERE id = ?', id);
 }

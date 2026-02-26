@@ -42,6 +42,7 @@ export function AddIngredientScreen({ batchId, onSaved, onCancel }: Props) {
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const unitLabel = amountUnit && amountUnit.trim().length > 0 ? amountUnit : 'Select unit';
 
   const handleSave = async () => {
     if (!db) return;
@@ -70,7 +71,13 @@ export function AddIngredientScreen({ batchId, onSaved, onCancel }: Props) {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+        setShowUnitOptions(false);
+      }}
+      accessible={false}
+    >
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -78,85 +85,92 @@ export function AddIngredientScreen({ batchId, onSaved, onCancel }: Props) {
         <ScrollView keyboardShouldPersistTaps="handled">
           <Text style={styles.title}>Add Ingredient</Text>
 
-      <Text style={styles.label}>Name *</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder="e.g. Wildflower Honey"
-        placeholderTextColor={lightTheme.muted}
-      />
+          <Text style={styles.label}>Name *</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="e.g. Wildflower Honey"
+            placeholderTextColor={lightTheme.muted}
+          />
 
-      <Text style={styles.label}>Amount (optional)</Text>
-      <View style={styles.row}>
-        <TextInput
-          style={[styles.input, styles.inputSmall]}
-          value={amountValue}
-          onChangeText={setAmountValue}
-          placeholder="Value"
-          keyboardType="decimal-pad"
-          placeholderTextColor={lightTheme.muted}
-        />
-        <View style={styles.inputSmall}>
-          <Pressable
-            style={[styles.input, styles.unitSelectBox]}
-            onPress={() => setShowUnitOptions((v) => !v)}
-          >
-            <Text style={styles.unitSelectText}>{amountUnit || 'Select unit'}</Text>
-          </Pressable>
-          {showUnitOptions && (
-            <View style={styles.unitOptions}>
-              {AMOUNT_UNITS.filter(Boolean).map((u) => (
-                <Pressable
-                  key={u}
-                  style={styles.unitOption}
-                  onPress={() => {
-                    setAmountUnit(u);
-                    setShowUnitOptions(false);
-                  }}
-                >
-                  <Text style={styles.unitOptionText}>{u}</Text>
-                </Pressable>
-              ))}
+          <Text style={styles.label}>Amount (optional)</Text>
+          <View style={styles.row}>
+            <View style={styles.amountColumn}>
+              <Text style={styles.subLabel}>Value</Text>
+              <TextInput
+                style={[styles.input, styles.amountInput]}
+                value={amountValue}
+                onChangeText={setAmountValue}
+                placeholder="Value"
+                keyboardType="decimal-pad"
+                placeholderTextColor={lightTheme.muted}
+              />
             </View>
-          )}
-        </View>
-      </View>
+            <View style={styles.amountColumn}>
+              <Text style={styles.subLabel}>Unit</Text>
+              <View style={styles.unitContainer}>
+                <Pressable
+                  style={[styles.input, styles.amountInput, styles.unitSelectBox]}
+                  onPress={() => setShowUnitOptions((v) => !v)}
+                >
+                  <Text
+                    style={[
+                      styles.unitSelectText,
+                      unitLabel === 'Select unit' && styles.unitSelectPlaceholder,
+                    ]}
+                  >
+                    {unitLabel}
+                  </Text>
+                </Pressable>
+                {showUnitOptions && (
+                  <View style={styles.unitOptions}>
+                    {AMOUNT_UNITS.filter(Boolean).map((u) => (
+                      <Pressable
+                        key={u}
+                        style={styles.unitOption}
+                        onPress={() => {
+                          setAmountUnit(u);
+                          setShowUnitOptions(false);
+                        }}
+                      >
+                        <Text style={styles.unitOptionText}>{u}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
 
-      <Text style={styles.label}>Type (optional)</Text>
-      <View style={styles.chipRow}>
-        {INGREDIENT_TYPES.map((t) => (
-          <Pressable
-            key={t}
-            style={[
-              styles.chip,
-              ingredientType === t && styles.chipSelected,
-            ]}
-            onPress={() => setIngredientType(ingredientType === t ? null : t)}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                ingredientType === t && styles.chipTextSelected,
-              ]}
-            >
-              {t}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+          <Text style={styles.label}>Type (optional)</Text>
+          <View style={styles.chipRow}>
+            {INGREDIENT_TYPES.map((t) => (
+              <Pressable
+                key={t}
+                style={[styles.chip, ingredientType === t && styles.chipSelected]}
+                onPress={() => setIngredientType(ingredientType === t ? null : t)}
+              >
+                <Text
+                  style={[styles.chipText, ingredientType === t && styles.chipTextSelected]}
+                >
+                  {t}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
 
-      <Text style={styles.label}>Notes (optional)</Text>
-      <TextInput
-        style={[styles.input, styles.textArea]}
-        value={notes}
-        onChangeText={setNotes}
-        placeholder="Additional notes"
-        placeholderTextColor={lightTheme.muted}
-        multiline
-      />
+          <Text style={styles.label}>Notes (optional)</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Additional notes"
+            placeholderTextColor={lightTheme.muted}
+            multiline
+          />
 
-      {error && <Text style={styles.error}>{error}</Text>}
+          {error && <Text style={styles.error}>{error}</Text>}
 
           <View style={styles.actions}>
             <Pressable
@@ -164,9 +178,7 @@ export function AddIngredientScreen({ batchId, onSaved, onCancel }: Props) {
               onPress={handleSave}
               disabled={saving}
             >
-              <Text style={styles.btnPrimaryText}>
-                {saving ? 'Saving...' : 'Save'}
-              </Text>
+              <Text style={styles.btnPrimaryText}>{saving ? 'Saving...' : 'Save'}</Text>
             </Pressable>
             <Pressable style={styles.btn} onPress={onCancel}>
               <Text style={styles.btnSecondaryText}>Cancel</Text>
@@ -205,9 +217,29 @@ const styles = StyleSheet.create({
     color: lightTheme.text,
     marginBottom: 16,
   },
-  inputSmall: {
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+    zIndex: 10,
+  },
+  amountColumn: {
     flex: 1,
+  },
+  subLabel: {
+    fontSize: 12,
+    color: lightTheme.muted,
+    marginBottom: 6,
+  },
+  amountInput: {
+    height: 46,
     marginBottom: 0,
+    paddingVertical: 10,
+  },
+  unitContainer: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 20,
   },
   unitSelectBox: {
     justifyContent: 'center',
@@ -216,14 +248,21 @@ const styles = StyleSheet.create({
     color: lightTheme.text,
     fontSize: 16,
   },
+  unitSelectPlaceholder: {
+    color: lightTheme.muted,
+  },
   unitOptions: {
+    position: 'absolute',
+    top: 50,
+    left: 0,
+    right: 0,
     backgroundColor: lightTheme.surface,
     borderWidth: 1,
     borderColor: lightTheme.border,
     borderRadius: 8,
-    marginTop: -8,
-    marginBottom: 8,
     overflow: 'hidden',
+    zIndex: 30,
+    elevation: 6,
   },
   unitOption: {
     paddingVertical: 10,
@@ -233,11 +272,6 @@ const styles = StyleSheet.create({
   },
   unitOptionText: {
     color: lightTheme.text,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
   },
   chipRow: {
     flexDirection: 'row',

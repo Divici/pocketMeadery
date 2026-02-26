@@ -3,11 +3,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useDatabase } from '../context/DatabaseContext';
 import { getSetting, setSetting } from '../db/repositories/appSettingsRepository';
 import { lightTheme } from '../theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const UNITS_KEY = 'units';
 type UnitsValue = 'US' | 'metric';
 
 export function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const { db } = useDatabase();
   const [units, setUnitsState] = useState<UnitsValue>('US');
 
@@ -31,7 +33,7 @@ export function SettingsScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8 }]}>
       <Text style={styles.title}>Settings</Text>
       <View style={styles.section}>
         <Text style={styles.label}>Units</Text>

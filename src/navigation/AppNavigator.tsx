@@ -17,10 +17,12 @@ import { AddIngredientScreen } from '../screens/AddIngredientScreen';
 import { AddReminderScreen } from '../screens/AddReminderScreen';
 import { EditStepScreen } from '../screens/EditStepScreen';
 import { EditIngredientScreen } from '../screens/EditIngredientScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { lightTheme } from '../theme';
 
 export type RootStackParamList = {
+  Home: undefined;
   MainTabs: undefined;
   CreateBatch: undefined;
   BatchDetail: { batchId: string };
@@ -128,11 +130,17 @@ function AppNavigatorContent() {
   return (
     <NavigationContainer ref={navigationRef}>
       <Stack.Navigator
+        initialRouteName="Home"
         screenOptions={{
           headerStyle: { backgroundColor: lightTheme.surface },
           headerTintColor: lightTheme.primary,
         }}
       >
+        <Stack.Screen
+          name="Home"
+          component={HomeScreenWrapper}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="MainTabs"
           component={MainTabs}
@@ -176,6 +184,10 @@ function AppNavigatorContent() {
       </Stack.Navigator>
     </NavigationContainer>
   );
+}
+
+function HomeScreenWrapper({ navigation }: { navigation: any }) {
+  return <HomeScreen onOpenMeads={() => navigation.replace('MainTabs')} />;
 }
 
 function CreateBatchScreenWrapper({ navigation }: { navigation: any }) {
