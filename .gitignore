@@ -14,3 +14,12 @@ npm-debug.log*
 .env
 .env.local
 .env.*.local
+
+# Local docs and tooling (do not push)
+BUILD-PLAN.md
+ON-DEVICE-CHECKLIST.md
+POCKET-MEADERY.md
+skills/
+.cursor/
+.claude/
+.agents/
